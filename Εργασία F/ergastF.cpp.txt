@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <alloc.h>
+#include <process.h>
+void main()
+{
+  int i,j,n,m,fl,*degree,**graph,*path;
+  float **weights,sum;
+  printf("Δώστε τον αριθμό των κορυφών του γραφήματος = ? ");
+  scanf("%d",&n);
+  if((degree=(int *)malloc(n*sizeof(int)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 1\n");
+    exit(1);
+  }
+  if((graph=(int **)malloc(n*sizeof(int *)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 2\n");
+    exit(2);
+  }
+  if((weights=(float **)malloc(n*sizeof(float *)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 3\n");
+    exit(3);
+  }
+  for(i=0;i<n;i++){
+    printf("Δώστε τον βαθμό της κορυφής %d = ? ",i);
+    scanf("%d",&degree[i]);
+    if((graph[i]=(int *)malloc(degree[i]*sizeof(int)))==NULL){
+      printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 4\n");
+      exit(4);
+    }
+    if((weights[i]=(float *)malloc(degree[i]*sizeof(float)))==NULL){
+      printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 5\n");
+      exit(5);
+    }
+  }
+  for(i=0;i<n;i++){
+    printf("Δώστε τους αύξοντες αριθμούς των κορυφών που συνδέονται με την κορυφή %d = ? ",i);
+    for(j=0;j<degree[i];j++)
+      scanf("%d",&graph[i][j]);
+  }
+  for(i=0;i<n;i++){
+    printf("Δώστε τα βάρη των ακμών που συνδέουν την κορυφή %d = ? ",i);
+    for(j=0;j<degree[i];j++)
+      scanf("%f",&weights[i][j]);
+  }
+  printf("Δώστε τον αριθμό των κορυφών που αποτελούν τη διαδρομή = ? ");
+  scanf("%d",&m);
+  if((path=(int *)malloc(m*sizeof(int)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 6\n");
+    exit(6);
+  }
+  printf("Δώστε τους αύξοντες αριθμούς των κορυφών της διαδρομής με τη σειρά επίσκεψης τους = ? ");
+  for(i=0;i<m;i++)
+    scanf("%d",&path[i]);
+  sum=0;
+  for(i=0;i<m-1;i++){
+    fl=1;
+    for(j=0;j<degree[path[i]];j++){
+      if(graph[path[i]][j]==path[i+1]){
+	sum+=weights[path[i]][j];
+        fl=0;
+	break;
+      }
+    }
+    if(fl){
+      printf("Η διαδρομή ");
+      for(i=0;i<m;i++)
+	printf("%d ",path[i]);
+      printf("δεν είναι εφικτή \n");
+      break;
+    }
+  }
+  if(!fl){
+    printf("Η διαδρομή ");
+    for(i=0;i<m;i++)
+      printf("%d ",path[i]);
+    printf("έχει κόστος  %f\n",sum);
+  }
+  free(path);
+  free(degree);
+  for(i=0;i<n;i++){
+    free(graph[i]);
+    free(weights[i]);
+  }
+  free(graph);
+  free(weights);
+}

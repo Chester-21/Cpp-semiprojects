@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <math.h>
+#include <alloc.h>
+#include <process.h>
+void find_pair(float *x,float *y,int n,int *k,int *m);
+void join(float *x,float *y,int n);
+void main()
+{
+  int n,i;
+  float *x,*y;
+  printf("Δώστε τον αριθμό των ραδιόφαρων = ? ");
+  scanf("%d",&n);
+  if((x=(float *)malloc(n*sizeof(float)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 1\n");
+    exit(1);
+  }
+  if((y=(float *)malloc(n*sizeof(float)))==NULL){
+    printf("Δεν υπάρχει αρκετή διαθέσιμη μνήμη στη θέση 2\n");
+    exit(2);
+  }
+  for(i=0;i<n;i++){
+    printf("Δώστε τις συντεταγμένες x,y του υπ' αριθμόν %d ραδιόφαρου = ? ",i+1);
+    scanf("%f %f",&x[i],&y[i]);
+  }
+  join(x,y,n);
+  if(n%2)printf("Ο ραδιόφαρος στη θέση (%4.1f,%4.1f) δε θα αντικατασταθεί.\n",x[0],y[0]);
+  free(x);
+  free(y);
+}
+
+void find_pair(float *x,float *y,int n,int *k,int *m)
+{
+  int i,j,fl=1;
+  float d,mind;
+  for(i=0;i<n-1;i++){
+    for(j=i+1;j<n;j++){
+      d=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2));
+      if(fl){
+	mind=d;
+	*k=i;
+	*m=j;
+	fl=0;
+	continue;
+      }
+      if(d<mind){
+	mind=d;
+	*k=i;
+	*m=j;
+      }
+    }
+  }
+}
+
+void join(float *x,float *y,int n)
+{
+  int k,m;
+  static int count;
+  find_pair(x,y,n,&k,&m);
+  printf("Ζεύγος %d θέσεις (%4.1f,%4.1f)και(%4.1f,%4.1f)\n",++count,x[k],y[k],x[m],y[m]);
+  if(m==n-1){
+    n--;
+    x[k]=x[n-1];
+    y[k]=y[n-1];
+    n--;
+  }
+  else {
+    x[k]=x[n-1];
+    y[k]=y[n-1];
+    n--;
+    x[m]=x[n-1];
+    y[m]=y[n-1];
+    n--;
+  }
+  if(n>1)join(x,y,n);
+}
+

@@ -1,0 +1,47 @@
+#include <stdio.h>
+#define NMAX 10
+void main()
+{
+  int i,j,k,n,m,state[NMAX],fl;
+  float sinap[NMAX][NMAX],sum;
+  printf("Δώστε τον αριθμό των νευρώνων (max %d) = ? ",NMAX);
+  scanf("%d",&n);
+
+  for(i=0;i<n;i++){
+    printf("Δώστε την κατάσταση του νευρώνα %d = ? ",i+1);
+    scanf("%d",&state[i]);
+    for(j=0;j<n;j++){
+      if(i==j)
+	sinap[i][j]=0;
+      else{
+        printf("Δώστε το βάρος της σύναψης του νευρώνα %d με τον νευρώνα %d = ? ",i+1,j+1);
+        scanf("%f",&sinap[i][j]);
+      }
+    }
+  }
+  printf("Δώστε τον μέγιστο αριθμό επαναλήψεων για το stable state = ? ");
+  scanf("%d",&m);
+  for(k=0;k<m;k++){
+    fl=1;
+    for(i=0;i<n;i++){
+      sum=0;
+      for(j=0;j<n;j++)
+	sum+=sinap[i][j]*state[j];
+      if(sum*state[i]<0){
+	fl=0;
+	state[i]=-state[i];
+      }
+    }
+    if(fl)break;
+  }
+  if(fl){
+    printf("Stable state\n");
+    for(i=0;i<n;i++)
+      printf("Νευρώνας %d  state = %d \n",i+1,state[i]);
+  }
+  else{
+    printf("State μετά από %d επαναλήψεις\n",k);
+    for(i=0;i<n;i++)
+      printf("Νευρώνας %d  state = %d \n",i+1,state[i]);
+  }
+} 

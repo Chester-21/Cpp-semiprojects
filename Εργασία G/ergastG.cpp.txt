@@ -1,0 +1,181 @@
+#include <stdio.h>
+#include <process.h>
+
+struct record{
+  char name[31];
+  long cod,old_rec,new_rec;
+  int s_cod;
+};
+
+void main()
+{
+  struct record rec;
+  int mc,i,fl;
+  long cod,new_rec,size;
+  float kw_c;
+  char mfile[31],outfile[31];
+  FILE *fp,*nfp;
+  size=sizeof(rec);
+  printf("Δώστε το όνομα του αρχείου με τις εγγραφές (μέγιστο 30 χαρακτήρες)  = ? ");
+  fflush(stdin);
+  gets(mfile);
+  while(1){
+    printf("Δώστε\n");
+    printf("1 για καταχώρηση νέων πελατών\n");
+    printf("2 για διαγραφή πελατών\n");
+    printf("3 για έκδοση λογαριασμού\n");
+    printf("4 για καταχώρηση των ενδείξεων των μετριτών\n");
+    printf("5 για έξοδο\n");
+    scanf("%d",&mc);
+    if(mc==5)break;
+	
+	// 1. Καταχώρηση νέων πελατών
+    if(mc==1){
+      fp=fopen(mfile,"ab"); //append, binary
+      if(fp==NULL){
+		printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 1)\n",mfile);
+		exit(1);
+      }
+      fseek(fp,0,SEEK_END);
+      while(1){
+		printf("Δώστε τον κωδικό του πελάτη (-1 για έξοδο) = ? ");
+		scanf("%ld",&rec.cod);
+        if(rec.cod==-1)break;
+		printf("Δώστε το όνομα του πελάτη (μέγιστο 30 χαρακτήρες)= ? ");
+        fflush(stdin);
+        gets(rec.name);
+        rec.s_cod=1;
+        rec.old_rec=0;
+		rec.new_rec=0;
+		fwrite(&rec,size,1,fp);
+      }
+      fclose(fp);
+      continue;
+    }
+	
+	// 2. Διαγραφή Πελατών
+    if(mc==2){
+      fp=fopen(mfile,"r+b"); //read+write, binary
+      if(fp==NULL){
+		printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 2)\n",mfile);
+		exit(2);
+      }
+      while(1){
+		printf("Δώστε τον κωδικό του πελάτη που θα διαγραφεί (-1 για έξοδο) = ? ");
+		scanf("%ld",&cod);
+        if(cod==-1)break;
+		fseek(fp,0,SEEK_SET);
+		while(1){
+			fread(&rec,size,1,fp);
+			if(feof(fp)){
+				printf("Δεν υπάρχει πελάτης με κωδικό %ld\n",cod);
+				break;
+			}
+			if(cod==rec.cod){
+				rec.s_cod=0;
+				fseek(fp,-size,SEEK_CUR);
+				fwrite(&rec,size,1,fp);
+				break;
+			} 
+		}
+      }
+      fclose(fp);
+      continue;
+    }
+	
+	// 3. Έκδοση Λογαριασμού
+    if(mc==3){
+      fp=fopen(mfile,"r+b"); //read+write, binary
+      if(fp==NULL){
+		printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 3)\n",mfile);
+		exit(3);
+      }
+      printf("Δώστε την τιμή της κιλοβατώρας = ? ");
+      scanf("%f",&kw_c);
+      fseek(fp,0,SEEK_SET);
+      fl=0;
+      printf("Δώστε το όνομα του αρχείου όπου θα εκτυπωθούν οι λογαριασμοί(μέγιστο 30 χαρακτήρες)= ?");
+      fflush(stdin);
+      gets(outfile);
+      nfp=fopen(outfile,"w");
+      if(nfp==NULL){
+		printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 4)\n",outfile);
+		exit(4);
+      }
+      while(1){
+		fread(&rec,size,1,fp);
+		if(feof(fp))break;
+		fprintf(nfp,"_________________________________________________________________\n");
+		fprintf(nfp,"Όνομα              : %-30s  \n",rec.name); //left justify, minimum 30chars, string
+		fprintf(nfp,"Προηγούμενη ένδειξη: %-ld\n",rec.old_rec);
+		fprintf(nfp,"Νέα ένδειξη        : %-ld\n",rec.new_rec);
+		fprintf(nfp,"KWH                : %-ld   \n",rec.new_rec-rec.old_rec);
+		fprintf(nfp,"Αξία               : %-7.2f \n",kw_c*(rec.new_rec-rec.old_rec)) // left justify, minimum 7 chars & 2 decimals
+		rec.old_rec=rec.new_rec;
+		if(rec.s_cod==0)fl=1; // Έλεγχος ανάγκης εκκαθάρισης
+		fseek(fp,-size,SEEK_CUR);
+		fwrite(&rec,size,1,fp);
+		fseek(fp,0,SEEK_CUR);
+      }
+      fclose(nfp);
+      if(fl){
+		printf("Το αρχείο πρόκειται να εκκαθαριστεί\n");
+		printf("Δώστε το όνομα του αρχείου που θα προκύψει μετά την εκκαθάριση (μέγιστο 30 χαρακτήρες)= ?");
+		fflush(stdin);
+		gets(mfile);
+		nfp=fopen(mfile,"wb");
+		if(nfp==NULL){
+			printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 5)\n",mfile);
+			exit(5);
+        }
+		fseek(nfp,0,SEEK_SET);
+		fseek(fp,0,SEEK_SET);
+		while(1){
+			fread(&rec,size,1,fp);
+			if(feof(fp))break;
+			if(rec.s_cod==0)continue;
+			fwrite(&rec,size,1,nfp);
+		}
+		fclose(nfp);
+      }
+      fclose(fp);
+      continue;
+    }
+	
+	// 4. Καταχώρηση Ενδείξεων
+	if(mc==4){
+		fp=fopen(mfile,"r+b");
+		if(fp==NULL){
+		printf("Δε μπορώ να ανοίξω το αρχείο %s (Θέση 6)\n",mfile);
+		exit(6);
+		}
+		while(1){
+			printf("Δώστε τον κωδικό του πελάτη (-1 για έξοδο) = ? ");
+			scanf("%ld",&cod);
+			if(cod==-1)break;
+			fseek(fp,0,SEEK_SET);
+			while(1){
+				fread(&rec,size,1,fp);
+				if(feof(fp)){
+					printf("Δεν υπάρχει πελάτης με κωδικό %ld\n",cod);
+					break;
+				}
+				if(cod==rec.cod){
+					printf("Δώστε τη νέα ένδειξη του μετρητή για τον κωδικό %ld = ?  ",cod);
+					scanf("%ld",&new_rec);
+					rec.old_rec=rec.new_rec;
+					rec.new_rec=new_rec;
+					fseek(fp,-size,SEEK_CUR);
+					fwrite(&rec,size,1,fp);
+					break;
+				}
+			}
+		}
+	fclose(fp);
+	}
+  }
+}
+
+
+
+
